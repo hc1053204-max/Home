@@ -1,1 +1,28 @@
+/* 動態背景切換 */
+body.stage-1 { background: url('forest.jpg') no-repeat center; background-size: cover; }
+body.stage-2 { background: url('dungeon.jpg') no-repeat center; background-size: cover; }
+body.stage-3 { background: url('dragon-lair.jpg') no-repeat center; background-size: cover; }
 
+/* 血條動態效果 */
+.hp-bar-container {
+    width: 200px;
+    height: 20px;
+    background: #444;
+    border: 2px solid #000;
+}
+
+.hp-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #2ecc71, #27ae60);
+    transition: width 0.5s ease-in-out; /* 平滑縮短動畫 */
+}
+
+/* 血量低下警示 */
+.hp-low {
+    background: linear-gradient(90deg, #e74c3c, #c0392b);
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    50% { opacity: 0.7; }
+}
