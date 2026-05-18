@@ -2,28 +2,42 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
+    <title>RPG Game</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="stage-1"> <div id="game-container">
-        <div class="battle-scene">
-            <div class="monster-side">
-                <div class="hp-bar-container">
-                    <div id="monster-hp" class="hp-fill" style="width: 100%;"></div>
-                </div>
-                <div id="monster-sprite">👾</div>
-            </div>
+<body>
 
-            <div class="player-side">
-                <div id="player-sprite">🛡️</div>
-                <div class="hp-bar-container">
-                    <div id="player-hp" class="hp-fill" style="width: 100%;"></div>
-                </div>
-            </div>
-        </div>
-        
-        <div id="battle-log">
-            <p>[系統] 準備開始戰鬥...</p>
-        </div>
+<h1>⚔️ RPG Adventure</h1>
+
+<div class="characters">
+    <div class="card" onclick="selectRole('Warrior')">
+        <h2>戰士</h2>
+        <img src="assets/warrior.png">
+        <p>HP高 / 攻擊強</p>
     </div>
+
+    <div class="card" onclick="selectRole('Mage')">
+        <h2>法師</h2>
+        <img src="assets/mage.png">
+        <p>高輸出</p>
+    </div>
+
+    <div class="card" onclick="selectRole('Archer')">
+        <h2>弓箭手</h2>
+        <img src="assets/archer.png">
+        <p>高速度</p>
+    </div>
+</div>
+
+<div id="battle" style="display:none;">
+    <h2>⚔️ 戰鬥中</h2>
+    <p id="player">玩家 HP: 100</p>
+    <p id="monster">怪物 HP: 100</p>
+
+    <button onclick="attack()">攻擊</button>
+</div>
+
+<script src="script.js"></script>
+
 </body>
 </html>
