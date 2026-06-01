@@ -33,8 +33,30 @@ const STAGE_CONFIG = {
 
 let gameState = {
     player: null, monster: null, currentStage: 1, currentMonsterIndex: 0,
-    totalMonstersInStage: 0, inBattle: false, actionInProgress: false, bossFightActive: false
+    totalMonstersInStage: 0, inBattle: false, actionInProgress: false, 
+    bossFightActive: false, defeatedInStage: 0
 };
+
+const cityInput = document.getElementById('cityInput');
+const searchBtn = document.getElementById('searchBtn');
+const locationBtn = document.getElementById('locationBtn');
+const suggestions = document.getElementById('suggestions');
+const errorAlert = document.getElementById('errorAlert');
+const loadingSpinner = document.getElementById('loadingSpinner');
+const weatherMain = document.getElementById('weatherMain');
+const initialScreen = document.getElementById('initialScreen');
+
+searchBtn.addEventListener('click', () => searchCity(cityInput.value));
+locationBtn.addEventListener('click', getUserLocation);
+cityInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') searchCity(cityInput.value);
+});
+cityInput.addEventListener('input', showSuggestions);
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.search-section')) {
+        suggestions.classList.remove('active');
+    }
+});
 
 function showScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -90,6 +112,8 @@ function selectRole(role, el) {
 
 function startNewGame() {
     gameState.currentStage = 1;
+    gameState.currentMonsterIndex = 0;
+    gameState.defeatedInStage = 0;
     document.getElementById('playerNameBattle').textContent = gameState.player.name;
     document.getElementById('playerIcon').textContent = gameState.player.icon;
     startStage();
@@ -100,6 +124,7 @@ function startStage() {
     gameState.totalMonstersInStage = cfg.smallMonsters;
     gameState.currentMonsterIndex = 0;
     gameState.bossFightActive = false;
+    gameState.defeatedInStage = 0;
     
     document.getElementById('stageName').textContent = cfg.name;
     document.getElementById('logContent').innerHTML = '';
@@ -117,8 +142,8 @@ function startNextBattle() {
     
     if (isBoss) {
         gameState.monster = {
-            name: '【第' + gameState.currentStage + '關 Boss】',
-            icon: '👿',
+            name: '【第' + gameState.currentStage + '關Boss】',
+            icon: '🔥',
             hp: cfg.bossHp,
             maxHp: cfg.bossHp,
             atk: cfg.bossAtk,
@@ -138,7 +163,7 @@ function startNextBattle() {
             skills: { 1: { name: '普通攻擊', damage: 15 }, 2: { name: '重擊', damage: 25 }, 3: { name: '狂暴', damage: 35 } }
         };
         document.getElementById('stageProgress').textContent = '小怪 ' + gameState.currentMonsterIndex + '/' + cfg.smallMonsters;
-        addLog('小怪出現了！');
+        addLog('小怪出現了！第 ' + gameState.currentMonsterIndex + ' 個小怪！');
     }
     
     gameState.inBattle = true;
@@ -223,6 +248,7 @@ function battleEnd(won) {
     gameState.inBattle = false;
     if (!won) { gameOver(); return; }
     
+    gameState.defeatedInStage++;
     const reward = 30 + gameState.currentStage * 10;
     gameState.player.xp += reward;
     
@@ -257,28 +283,35 @@ function battleEnd(won) {
 }
 
 function nextBattle() {
+    const cfg = STAGE_CONFIG[gameState.currentStage];
+    
+    // ✅ 修復：正確判斷是否需要進行下一場戰鬥
     if (gameState.bossFightActive) {
+        // 剛擊敗了 Boss
         if (gameState.currentStage >= 3) {
+            // 所有關都完成 - 通關！
             const stats = '<p>🏆 恭喜通關所有 3 關！</p><p>最終等級：Lv.' + gameState.player.level + '</p><p>最終攻擊力：' + gameState.player.atk + '</p><p>最終 HP：' + gameState.player.maxHp + '</p>';
             document.getElementById('finalStats').innerHTML = stats;
             showScreen('completeScreen');
             return;
         }
+        // 進入下一關
         gameState.currentStage++;
         startStage();
     } else {
+        // 繼續本關的戰鬥（還有小怪或 Boss）
         startNextBattle();
     }
 }
 
 function gameOver() {
-    const stats = '<p>到達階段：第 ' + gameState.currentStage + ' 關</p><p>最終等級：Lv.' + gameState.player.level + '</p><p>最終攻擊力：' + gameState.player.atk + '</p>';
+    const stats = '<p>到達階段：第 ' + gameState.currentStage + ' 關</p><p>擊敗小怪數：' + gameState.defeatedInStage + '</p><p>最終等級：Lv.' + gameState.player.level + '</p><p>最終攻擊力：' + gameState.player.atk + '</p>';
     document.getElementById('gameOverStats').innerHTML = stats;
     showScreen('gameOverScreen');
 }
 
 function restartGame() {
-    gameState = { player: null, monster: null, currentStage: 1, currentMonsterIndex: 0, totalMonstersInStage: 0, inBattle: false, actionInProgress: false, bossFightActive: false };
+    gameState = { player: null, monster: null, currentStage: 1, currentMonsterIndex: 0, totalMonstersInStage: 0, inBattle: false, actionInProgress: false, bossFightActive: false, defeatedInStage: 0 };
     document.querySelectorAll('.card').forEach(c => c.style.opacity = '1');
     showScreen('selectionScreen');
 }
