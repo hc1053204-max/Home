@@ -37,10 +37,41 @@ const ROLES = {
     }
 };
 
+// 3關完整配置
 const STAGE_CONFIG = {
-    1: { monsters: 2, monsterHp: 40, monsterAtk: 8 },
-    2: { monsters: 3, monsterHp: 60, monsterAtk: 12 },
-    3: { monsters: 4, monsterHp: 80, monsterAtk: 15 }
+    1: { 
+        name: '第一關 - 新手村',
+        description: '在新手村消滅所有敵人',
+        smallMonsters: 2,
+        smallMonsterHp: 40,
+        smallMonsterAtk: 8,
+        bossName: '村長的守衛隊長',
+        bossIcon: '👿',
+        bossHp: 100,
+        bossAtk: 12
+    },
+    2: { 
+        name: '第二關 - 黑暗森林',
+        description: '在黑暗森林中打敗所有怪物',
+        smallMonsters: 3,
+        smallMonsterHp: 60,
+        smallMonsterAtk: 12,
+        bossName: '森林守護獸',
+        bossIcon: '👿',
+        bossHp: 150,
+        bossAtk: 15
+    },
+    3: { 
+        name: '第三關 - 龍之城堡',
+        description: '進入城堡，擊敗最終的龍王Boss！',
+        smallMonsters: 4,
+        smallMonsterHp: 80,
+        smallMonsterAtk: 15,
+        bossName: '龍王 - 最終Boss',
+        bossIcon: '🐉',
+        bossHp: 200,
+        bossAtk: 18
+    }
 };
 
 const MAX_STAGE = 3;
@@ -58,7 +89,9 @@ let gameState = {
     totalMonstersInStage: 0,
     inBattle: false,
     actionInProgress: false,
-    defeatedEnemies: 0
+    defeatedEnemiesInStage: 0,
+    totalDefeatedEnemies: 0,
+    bossFightActive: false
 };
 
 // ============================================
@@ -81,11 +114,11 @@ function addLog(message, type = 'system') {
     logContent.scrollTop = logContent.scrollHeight;
 }
 
-function createDamageNumber(damage, isHeal = false) {
+function createDamageNumber(damage, isHeal = false, isCritical = false) {
     const container = document.getElementById('damageNumbers');
     const damageNum = document.createElement('div');
-    damageNum.className = `damage-number ${isHeal ? 'heal' : 'damage'}`;
-    damageNum.textContent = (isHeal ? '+' : '-') + damage;
+    damageNum.className = `damage-number ${isHeal ? 'heal' : 'damage'} ${isCritical ? 'critical' : ''}`;
+    damageNum.textContent = (isHeal ? '+' : isCritical ? '暴擊 ' : '-') + damage;
     
     // 隨機位置
     const x = Math.random() * 400 + 300;
@@ -111,8 +144,10 @@ function updatePlayerUI() {
     
     document.getElementById('playerHpText').textContent = 
         gameState.player.hp + '/' + gameState.player.maxHp;
-    document.getElementById('playerLevel').textContent = gameState.player.level;
+    document.getElementById('playerLevelDisplay').textContent = gameState.player.level;
     document.getElementById('playerAtk').textContent = gameState.player.atk;
+    document.getElementById('playerXp').textContent = 
+        gameState.player.xp + '/' + gameState.player.xpToNext;
 }
 
 function updateMonsterUI() {
@@ -136,7 +171,7 @@ function calculateDamage(attacker, isSkill = false, skillId = 1) {
         baseDamage = attacker.skills[skillId].damage;
     }
     
-    // 添加隨機變異 (±20%)
+    // 隨機波動 (±20%)
     const variance = 0.8 + Math.random() * 0.4;
     const damage = Math.floor(baseDamage * variance);
     
@@ -173,85 +208,113 @@ function selectRole(roleName, element) {
     
     // UI 反饋
     document.querySelectorAll('.card').forEach(card => {
-        card.style.opacity = '0.3';
+        card.style.opacity = '0.2';
     });
     element.style.opacity = '1';
     
+    // 更新技能菜單
+    updateSkillMenu();
+    
     // 延遲開始遊戲
     setTimeout(() => {
-        startNewStage();
-    }, 500);
+        startNewGame();
+    }, 800);
+}
+
+function updateSkillMenu() {
+    for (let i = 1; i <= 3; i++) {
+        const skill = gameState.player.skills[i];
+        document.getElementById(`skill${i}Name`).textContent = skill.name;
+        document.getElementById(`skill${i}Dmg`).textContent = `傷害: ${skill.damage}`;
+    }
 }
 
 // ============================================
-// 戰鬥系統
+// 遊戲開始
 // ============================================
 
-function startNewStage() {
+function startNewGame() {
     gameState.currentStage = 1;
-    gameState.defeatedEnemies = 0;
-    gameState.currentMonsterIndex = 0;
+    gameState.totalDefeatedEnemies = 0;
     
     // 更新玩家 UI
     document.getElementById('playerName').textContent = gameState.player.name;
     document.getElementById('playerIcon').textContent = gameState.player.icon;
+    document.getElementById('playerNameBattle').textContent = gameState.player.name;
     
+    startStage();
+}
+
+function startStage() {
+    const stageConfig = STAGE_CONFIG[gameState.currentStage];
+    gameState.totalMonstersInStage = stageConfig.smallMonsters;
+    gameState.currentMonsterIndex = 0;
+    gameState.defeatedEnemiesInStage = 0;
+    gameState.bossFightActive = false;
+    
+    // 更新舞台資訊
+    document.getElementById('stageName').textContent = stageConfig.name;
+    document.getElementById('stageDesc').textContent = stageConfig.description;
+    
+    addLog(`\n🗡️ ${stageConfig.name} 開始！`, 'system');
+    addLog(`本關需要擊敗 ${stageConfig.smallMonsters} 隻小怪和 1 個 Boss！`, 'system');
+    
+    // 開始第一場戰鬥
     startNextBattle();
 }
 
 function startNextBattle() {
     const stageConfig = STAGE_CONFIG[gameState.currentStage];
-    
-    gameState.totalMonstersInStage = stageConfig.monsters;
     gameState.currentMonsterIndex++;
     
-    // 生成怪物
-    const monsterIndex = gameState.currentMonsterIndex;
-    const isBoss = (monsterIndex === stageConfig.monsters);
+    // 判斷是小怪還是 Boss
+    const isBoss = (gameState.currentMonsterIndex > stageConfig.smallMonsters);
+    gameState.bossFightActive = isBoss;
     
     if (isBoss) {
+        // Boss 戰
         gameState.monster = {
-            name: `Stage ${gameState.currentStage} Boss`,
-            icon: '👹',
-            hp: 80 + gameState.currentStage * 60,
-            maxHp: 80 + gameState.currentStage * 60,
-            atk: 12 + gameState.currentStage * 8,
+            name: stageConfig.bossName,
+            icon: stageConfig.bossIcon,
+            hp: stageConfig.bossHp,
+            maxHp: stageConfig.bossHp,
+            atk: stageConfig.bossAtk,
             level: gameState.currentStage + 1,
             isBoss: true,
-            skills: createMonsterSkills()
+            skills: createBossSkills()
         };
+        
+        document.getElementById('stageProgress').textContent = 
+            `⚡ Boss戰 - 最終決戰`;
+        
+        addLog(`\n⚠️ Boss 出現！`, 'system');
+        addLog(`${gameState.monster.name} 現身了！`, 'skill');
     } else {
+        // 小怪戰
         gameState.monster = {
-            name: `小怪 ${monsterIndex}`,
+            name: `小怪 ${gameState.currentMonsterIndex}/${stageConfig.smallMonsters}`,
             icon: '👹',
-            hp: stageConfig.monsterHp + gameState.currentStage * 10,
-            maxHp: stageConfig.monsterHp + gameState.currentStage * 10,
-            atk: stageConfig.monsterAtk + gameState.currentStage * 2,
+            hp: stageConfig.smallMonsterHp + gameState.currentStage * 10,
+            maxHp: stageConfig.smallMonsterHp + gameState.currentStage * 10,
+            atk: stageConfig.smallMonsterAtk + gameState.currentStage * 2,
             level: gameState.currentStage,
             isBoss: false,
             skills: createMonsterSkills()
         };
+        
+        document.getElementById('stageProgress').textContent = 
+            `小怪 ${gameState.currentMonsterIndex}/${stageConfig.smallMonsters}`;
+        
+        addLog(`\n小怪出現了！第 ${gameState.currentMonsterIndex} 個小怪！`, 'system');
     }
     
-    // 重置玩家血量（新戰鬥）
-    gameState.player.hp = gameState.player.maxHp;
-    
+    // 每場新戰鬥不恢復血量（只在升級時恢復）
     gameState.inBattle = true;
-    
-    // 更新舞台信息
-    document.getElementById('stageName').textContent = 
-        `Stage ${gameState.currentStage}${gameState.monster.isBoss ? ' - BOSS' : ''}`;
-    document.getElementById('stageProgress').textContent = 
-        `${gameState.currentMonsterIndex}/${gameState.totalMonstersInStage}`;
     
     // 更新怪物 UI
     document.getElementById('monsterName').textContent = gameState.monster.name;
     document.getElementById('monsterIcon').textContent = gameState.monster.icon;
     document.getElementById('monsterAtk').textContent = gameState.monster.atk;
-    
-    // 清空日誌
-    document.getElementById('logContent').innerHTML = '';
-    addLog(`戰鬥開始！${gameState.player.name} vs ${gameState.monster.name}`);
     
     // 重置 UI
     hideSkillMenu();
@@ -270,6 +333,14 @@ function createMonsterSkills() {
     };
 }
 
+function createBossSkills() {
+    return {
+        1: { name: '力量一擊', damage: 25, type: 'attack' },
+        2: { name: '地獄猛擊', damage: 35, type: 'attack' },
+        3: { name: '毀滅之力', damage: 45, type: 'attack' }
+    };
+}
+
 // ============================================
 // 玩家行動
 // ============================================
@@ -282,7 +353,7 @@ function playerAttack() {
     const damage = calculateDamage(gameState.player);
     gameState.monster.hp = Math.max(0, gameState.monster.hp - damage);
     
-    addLog(`${gameState.player.name} 攻擊 ${gameState.monster.name}，造成 ${damage} 點傷害！`, 'damage');
+    addLog(`${gameState.player.name} 攻擊，造成 ${damage} 點傷害！`, 'damage');
     createDamageNumber(damage);
     updateMonsterUI();
     
@@ -314,7 +385,7 @@ function playerUseSkill(skillId) {
     const damage = calculateDamage(gameState.player, true, skillId);
     gameState.monster.hp = Math.max(0, gameState.monster.hp - damage);
     
-    addLog(`${gameState.player.name} 使用 【${skill.name}】，造成 ${damage} 點傷害！`, 'skill');
+    addLog(`${gameState.player.name} 使用【${skill.name}】，造成 ${damage} 點傷害！`, 'skill');
     createDamageNumber(damage);
     updateMonsterUI();
     
@@ -332,7 +403,7 @@ function playerUseSkill(skillId) {
 // ============================================
 
 function monsterTurn() {
-    addLog(`${gameState.monster.name} 的回合...`);
+    addLog(`${gameState.monster.name} 發動攻擊...`);
     
     setTimeout(() => {
         const skillId = Math.floor(Math.random() * 3) + 1;
@@ -341,13 +412,14 @@ function monsterTurn() {
         
         gameState.player.hp = Math.max(0, gameState.player.hp - damage);
         
-        addLog(`${gameState.monster.name} 使用 【${skill.name}】，造成 ${damage} 點傷害！`, 'damage');
+        addLog(`${gameState.monster.name} 使用【${skill.name}】，造成 ${damage} 點傷害！`, 'damage');
         createDamageNumber(damage);
         updatePlayerUI();
         
         setTimeout(() => {
+            // 玩家HP歸零 - 遊戲立即結束
             if (gameState.player.hp <= 0) {
-                battleEnd(false);
+                gameOver();
             } else {
                 disableActions(false);
             }
@@ -356,7 +428,7 @@ function monsterTurn() {
 }
 
 // ============================================
-// 戰鬥結束
+// 戰鬥結束邏輯
 // ============================================
 
 function battleEnd(playerWon) {
@@ -364,37 +436,46 @@ function battleEnd(playerWon) {
     disableActions(true);
     
     setTimeout(() => {
-        if (playerWon) {
-            const reward = 30 + gameState.currentStage * 10;
-            
-            gameState.player.xp += reward;
-            gameState.defeatedEnemies++;
-            
-            let levelUpMessage = '';
-            if (gameState.player.xp >= gameState.player.xpToNext) {
-                gameState.player.level++;
-                gameState.player.xpToNext = Math.floor(gameState.player.xpToNext * 1.2);
-                gameState.player.maxHp += 10;
-                gameState.player.hp = gameState.player.maxHp;
-                gameState.player.atk += 5;
-                levelUpMessage = `\n⭐ 升級到 Lv.${gameState.player.level}！`;
-            }
-            
-            // Boss 戰利品
-            if (gameState.monster.isBoss) {
-                const atkBonus = 5 + gameState.currentStage * 2;
-                gameState.player.atk += atkBonus;
-                levelUpMessage += `\n🎁 獲得掉落：攻擊力飾品 +${atkBonus}`;
-            }
-            
-            showResultScreen(true, reward, levelUpMessage);
-        } else {
-            showResultScreen(false, 0, '');
+        if (!playerWon) {
+            // 玩家死亡 - 立即遊戲結束
+            gameOver();
+            return;
         }
-    }, 500);
+        
+        // 玩家勝利
+        const isBoss = gameState.monster.isBoss;
+        const reward = 30 + gameState.currentStage * 10;
+        
+        gameState.player.xp += reward;
+        gameState.defeatedEnemiesInStage++;
+        gameState.totalDefeatedEnemies++;
+        
+        let levelUpMessage = '';
+        let didLevelUp = false;
+        
+        // 檢查升級
+        if (gameState.player.xp >= gameState.player.xpToNext) {
+            gameState.player.level++;
+            gameState.player.xpToNext = Math.floor(gameState.player.xpToNext * 1.2);
+            gameState.player.maxHp += 10;
+            gameState.player.hp = Math.min(gameState.player.hp + 20, gameState.player.maxHp);
+            gameState.player.atk += 5;
+            levelUpMessage = `\n⭐ 升級到 Lv.${gameState.player.level}！\n❤️ HP +20 | 💪 ATK +5`;
+            didLevelUp = true;
+        }
+        
+        // Boss 戰利品
+        if (isBoss) {
+            const atkBonus = 5 + gameState.currentStage * 2;
+            gameState.player.atk += atkBonus;
+            levelUpMessage += `\n🎁 Boss掉落：攻擊力飾品 +${atkBonus}`;
+        }
+        
+        showBattleResultScreen(playerWon, reward, levelUpMessage, isBoss);
+    }, 800);
 }
 
-function showResultScreen(won, reward, extraMessage) {
+function showBattleResultScreen(won, reward, extraMessage, isBoss) {
     const resultScreen = document.getElementById('resultScreen');
     const resultIcon = document.getElementById('resultIcon');
     const resultTitle = document.getElementById('resultTitle');
@@ -402,65 +483,90 @@ function showResultScreen(won, reward, extraMessage) {
     const nextBtn = document.getElementById('nextBtn');
     const restartBtn = document.getElementById('restartBtn');
     
-    if (won) {
-        resultIcon.textContent = '🎉';
-        resultTitle.textContent = '勝利！';
+    resultIcon.textContent = '🎉';
+    resultTitle.textContent = '戰鬥勝利！';
+    
+    if (isBoss) {
+        resultDetails.innerHTML = `
+            <p>✨ 你擊敗了 ${gameState.monster.name}！</p>
+            <p>獲得 ${reward} XP</p>
+            <p>❤️ 當前 HP: ${gameState.player.hp}/${gameState.player.maxHp}</p>
+            ${extraMessage}
+        `;
+    } else {
         resultDetails.innerHTML = `
             <p>你擊敗了 ${gameState.monster.name}！</p>
             <p>獲得 ${reward} XP</p>
+            <p>❤️ 當前 HP: ${gameState.player.hp}/${gameState.player.maxHp}</p>
             ${extraMessage}
         `;
-        
-        nextBtn.style.display = 'block';
-        restartBtn.style.display = 'none';
-        
-        // 檢查是否完成本階段
-        if (gameState.currentMonsterIndex >= gameState.totalMonstersInStage) {
-            nextBtn.textContent = gameState.currentStage >= MAX_STAGE ? '查看結果' : '下一階段';
-        } else {
-            nextBtn.textContent = '下一場戰鬥';
-        }
+    }
+    
+    nextBtn.style.display = 'block';
+    restartBtn.style.display = 'none';
+    
+    if (isBoss && gameState.currentStage >= MAX_STAGE) {
+        nextBtn.textContent = '🏆 查看通關結果';
+    } else if (isBoss) {
+        nextBtn.textContent = '進入下一關';
     } else {
-        resultIcon.textContent = '💀';
-        resultTitle.textContent = '失敗...';
-        resultDetails.innerHTML = `
-            <p>你被 ${gameState.monster.name} 擊敗了...</p>
-            <p>已擊敗敵人：${gameState.defeatedEnemies}</p>
-            <p>到達階段：${gameState.currentStage}</p>
-        `;
-        
-        nextBtn.style.display = 'none';
-        restartBtn.style.display = 'block';
+        nextBtn.textContent = '繼續戰鬥';
     }
     
     showScreen('resultScreen');
 }
 
 function nextBattle() {
-    if (gameState.currentMonsterIndex >= gameState.totalMonstersInStage) {
-        // 本階段完成
+    const stageConfig = STAGE_CONFIG[gameState.currentStage];
+    
+    // 檢查是否完成本關（擊敗所有小怪 + Boss）
+    if (gameState.bossFightActive) {
+        // 剛剛擊敗了 Boss
         if (gameState.currentStage >= MAX_STAGE) {
-            showCompleteScreen();
+            // 所有關都完成 - 通關！
+            showGameWinScreen();
+            return;
+        } else {
+            // 進入下一關
+            gameState.currentStage++;
+            startStage();
             return;
         }
-        
-        gameState.currentStage++;
-        gameState.currentMonsterIndex = 0;
     }
     
+    // 繼續本關的戰鬥（還有更多小怪或 Boss）
     startNextBattle();
 }
 
-function showCompleteScreen() {
+function showGameWinScreen() {
     const finalStats = document.getElementById('finalStats');
     finalStats.innerHTML = `
+        <p>🏆 恭喜通關所有 3 關！</p>
+        <p>━━━━━━━━━━━━━━━━</p>
         <p>最終等級：Lv.${gameState.player.level}</p>
         <p>最終攻擊力：${gameState.player.atk}</p>
         <p>最終 HP：${gameState.player.maxHp}</p>
         <p>累計經驗：${gameState.player.xp}</p>
+        <p>擊敗敵人總數：${gameState.totalDefeatedEnemies}</p>
     `;
     
     showScreen('completeScreen');
+}
+
+function gameOver() {
+    gameState.inBattle = false;
+    disableActions(true);
+    
+    const gameOverStats = document.getElementById('gameOverStats');
+    gameOverStats.innerHTML = `
+        <p>到達階段：第 ${gameState.currentStage} 關</p>
+        <p>小怪擊敗數：${gameState.defeatedEnemiesInStage}</p>
+        <p>總敵人擊敗數：${gameState.totalDefeatedEnemies}</p>
+        <p>最終等級：Lv.${gameState.player.level}</p>
+        <p>最終攻擊力：${gameState.player.atk}</p>
+    `;
+    
+    showScreen('gameOverScreen');
 }
 
 function restartGame() {
@@ -475,7 +581,9 @@ function restartGame() {
         totalMonstersInStage: 0,
         inBattle: false,
         actionInProgress: false,
-        defeatedEnemies: 0
+        defeatedEnemiesInStage: 0,
+        totalDefeatedEnemies: 0,
+        bossFightActive: false
     };
     
     // 重置 UI
