@@ -3,186 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚔️ RPG Adventure - 冒險者之旅</title>
+    <title>⚔️ RPG冒險者之旅 - 三關之戰</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<!-- 主容器 -->
 <div class="game-container">
-    <!-- 遊戲標題 -->
+    <div class="background-particles"></div>
+
     <div class="header">
-        <h1>⚔️ RPG Adventure</h1>
-        <p>冒險者之旅 - 選擇你的職業，開始你的冒險！</p>
+        <h1>⚔️ RPG 冒險者之旅</h1>
+        <p>🗡️ 選擇你的職業，通過三關挑戰，成為真正的英雄！</p>
     </div>
 
     <!-- 選擇職業頁面 -->
     <div id="selectionScreen" class="screen active">
-        <h2>選擇你的職業</h2>
+        <h2>📜 選擇你的職業</h2>
         <div class="characters">
-            <div class="card warrior-card" onclick="selectRole('Warrior', this)">
+            <div class="card" onclick="selectRole('Warrior', this)">
                 <div class="card-icon">⚔️</div>
-                <h3>戰士 Warrior</h3>
+                <h3>戰士</h3>
                 <div class="stats">
                     <p>❤️ HP: 120</p>
                     <p>💪 ATK: 15</p>
                 </div>
-                <p class="description">攻擊力強，HP充足</p>
+                <p>攻擊力強，HP充足</p>
             </div>
 
-            <div class="card mage-card" onclick="selectRole('Mage', this)">
+            <div class="card" onclick="selectRole('Mage', this)">
                 <div class="card-icon">🔥</div>
-                <h3>法師 Mage</h3>
+                <h3>法師</h3>
                 <div class="stats">
                     <p>❤️ HP: 80</p>
                     <p>⚡ ATK: 22</p>
                 </div>
-                <p class="description">高輸出，魔法傷害</p>
+                <p>魔法傷害超高</p>
             </div>
 
-            <div class="card archer-card" onclick="selectRole('Archer', this)">
+            <div class="card" onclick="selectRole('Archer', this)">
                 <div class="card-icon">🏹</div>
-                <h3>弓箭手 Archer</h3>
+                <h3>弓箭手</h3>
                 <div class="stats">
                     <p>❤️ HP: 100</p>
                     <p>💨 ATK: 18</p>
                 </div>
-                <p class="description">速度快，遠程攻擊</p>
+                <p>速度快，遠程攻擊</p>
             </div>
         </div>
     </div>
 
     <!-- 戰鬥頁面 -->
     <div id="battleScreen" class="screen">
-        <!-- 舞台信息 -->
         <div class="stage-info">
-            <span id="stageName">Stage 1</span>
-            <span id="stageProgress">1/3</span>
+            <span id="stageName">第一關</span>
+            <span id="stageProgress">小怪 1/2</span>
         </div>
 
-        <!-- 戰鬥區域 -->
+        <div class="player-info-bar">
+            <span id="playerName">戰士</span>
+            <span id="playerLevel">Lv.1</span>
+        </div>
+
         <div class="battle-arena">
-            <!-- 玩家角色 -->
-            <div class="character-section player-section">
-                <div class="character-display">
-                    <div id="playerIcon" class="character-icon">⚔️</div>
-                    <div id="playerName" class="character-name">戰士</div>
-                </div>
+            <div class="character-section">
+                <div id="playerIcon" class="character-icon">⚔️</div>
+                <div id="playerNameBattle" class="character-name">戰士</div>
                 <div class="stats-panel">
-                    <div class="stat-row">
-                        <span class="stat-label">HP</span>
-                        <div class="hp-bar-container">
-                            <div id="playerHpBar" class="hp-bar" style="width: 100%"></div>
-                        </div>
-                        <span id="playerHpText" class="hp-text">100/100</span>
-                    </div>
-                    <div class="stat-row">
-                        <span class="stat-label">Level</span>
-                        <span id="playerLevel">1</span>
-                    </div>
-                    <div class="stat-row">
-                        <span class="stat-label">ATK</span>
-                        <span id="playerAtk">15</span>
+                    <div>HP: <span id="playerHpText">100/100</span></div>
+                    <div class="hp-bar-container">
+                        <div id="playerHpBar" class="hp-bar" style="width: 100%"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- VS 標誌 -->
             <div class="vs-sign">VS</div>
 
-            <!-- 怪物角色 -->
-            <div class="character-section monster-section">
-                <div class="character-display">
-                    <div id="monsterIcon" class="character-icon monster-icon">👹</div>
-                    <div id="monsterName" class="character-name">小怪 1</div>
-                </div>
+            <div class="character-section">
+                <div id="monsterIcon" class="character-icon">👹</div>
+                <div id="monsterName" class="character-name">小怪</div>
                 <div class="stats-panel">
-                    <div class="stat-row">
-                        <span class="stat-label">HP</span>
-                        <div class="hp-bar-container">
-                            <div id="monsterHpBar" class="hp-bar" style="width: 100%"></div>
-                        </div>
-                        <span id="monsterHpText" class="hp-text">50/50</span>
-                    </div>
-                    <div class="stat-row">
-                        <span class="stat-label">ATK</span>
-                        <span id="monsterAtk">8</span>
+                    <div>HP: <span id="monsterHpText">50/50</span></div>
+                    <div class="hp-bar-container">
+                        <div id="monsterHpBar" class="hp-bar" style="width: 100%"></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 戰鬥日誌 -->
         <div class="battle-log">
-            <div id="logContent" class="log-content">
-                <p class="log-item system">歡迎進入戰鬥！選擇你的行動。</p>
+            <div id="logContent">
+                <p class="log-item">⚔️ 準備開始戰鬥...</p>
             </div>
         </div>
 
-        <!-- 行動面板 -->
         <div class="action-panel">
-            <div class="button-group">
-                <button id="attackBtn" class="action-btn attack-btn" onclick="playerAttack()">
-                    <span class="btn-icon">⚔️</span>
-                    <span class="btn-text">攻擊</span>
-                </button>
-                <button id="skillBtn" class="action-btn skill-btn" onclick="showSkillMenu()">
-                    <span class="btn-icon">✨</span>
-                    <span class="btn-text">技能</span>
-                </button>
-            </div>
+            <button id="attackBtn" class="action-btn attack-btn" onclick="playerAttack()">⚔️ 攻擊</button>
+            <button id="skillBtn" class="action-btn skill-btn" onclick="showSkillMenu()">✨ 技能</button>
             <div id="skillMenu" class="skill-menu" style="display: none;">
-                <h4>選擇技能：</h4>
-                <div class="skill-buttons">
-                    <button class="skill-option" onclick="playerUseSkill(1)">技能 1</button>
-                    <button class="skill-option" onclick="playerUseSkill(2)">技能 2</button>
-                    <button class="skill-option" onclick="playerUseSkill(3)">技能 3</button>
-                    <button class="skill-option cancel" onclick="hideSkillMenu()">取消</button>
-                </div>
+                <button class="skill-option" onclick="playerUseSkill(1)">技能 1</button>
+                <button class="skill-option" onclick="playerUseSkill(2)">技能 2</button>
+                <button class="skill-option" onclick="playerUseSkill(3)">技能 3</button>
+                <button class="skill-option" onclick="hideSkillMenu()">取消</button>
             </div>
         </div>
     </div>
 
-    <!-- 勝利/失敗頁面 -->
+    <!-- 結果頁面 -->
     <div id="resultScreen" class="screen">
         <div class="result-container">
             <div id="resultIcon" class="result-icon">🎉</div>
-            <h2 id="resultTitle">勝利！</h2>
-            <div id="resultDetails" class="result-details">
-                <p>你擊敗了怪物！</p>
-                <p id="rewardText">獲得 50 XP</p>
-                <p id="levelUpText" style="display: none; color: #FFD700;">⭐ 升級了！</p>
-            </div>
-            <div class="button-group">
-                <button id="nextBtn" class="action-btn primary-btn" onclick="nextBattle()">
-                    下一個
-                </button>
-                <button id="restartBtn" class="action-btn" onclick="restartGame()" style="display: none;">
-                    重新開始
-                </button>
-            </div>
+            <h2 id="resultTitle">戰鬥勝利！</h2>
+            <div id="resultDetails"></div>
+            <button id="nextBtn" class="action-btn primary-btn" onclick="nextBattle()">▶️ 繼續</button>
+            <button id="restartBtn" class="action-btn" onclick="restartGame()" style="display: none;">🔄 重新開始</button>
         </div>
     </div>
 
-    <!-- 通關畫面 -->
+    <!-- 通關頁面 -->
     <div id="completeScreen" class="screen">
         <div class="result-container">
-            <div class="result-icon">👑</div>
-            <h2>恭喜！通關成功！</h2>
-            <div class="result-details">
-                <p>你已經完成了所有的關卡！</p>
-                <p id="finalStats"></p>
-            </div>
-            <button class="action-btn primary-btn" onclick="restartGame()">
-                重新開始
-            </button>
+            <div class="result-icon">🏆</div>
+            <h2>🏆 恭喜！通關成功！</h2>
+            <div id="finalStats"></div>
+            <button class="action-btn primary-btn" onclick="restartGame()">🔄 返回主菜單</button>
+        </div>
+    </div>
+
+    <!-- 遊戲結束頁面 -->
+    <div id="gameOverScreen" class="screen">
+        <div class="result-container">
+            <div class="result-icon">💀</div>
+            <h2>💀 遊戲結束...</h2>
+            <div id="gameOverStats"></div>
+            <button class="action-btn" onclick="restartGame()">🔄 返回主菜單</button>
         </div>
     </div>
 </div>
 
-<!-- 浮動傷害數字 -->
 <div id="damageNumbers"></div>
-
 <script src="game.js"></script>
 
 </body>
