@@ -135,6 +135,7 @@ function startStage() {
 }
 
 function startNextBattle() {
+    gameState.actionInProgress = false;
     const cfg = STAGE_CONFIG[gameState.currentStage];
     gameState.currentMonsterIndex++;
     const isBoss = (gameState.currentMonsterIndex > cfg.smallMonsters);
