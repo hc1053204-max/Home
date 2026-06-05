@@ -13,25 +13,32 @@
 /**
  * @brief Utils 命名空間：提供遊戲通用工具函式與常量
  * 
- * 包含終端顏色控制、日誌系統、UI 繪製工具以及輸入驗證函式。
+ * 本命名空間採取了「工具箱」設計模式，將所有無狀態的 UI 繪製與輸入處理函式集中管理。
+ * 包含終端顏色控制、日誌系統、視覺化 UI 繪製以及魯棒的輸入驗證函式。
  */
 namespace Utils {
     // 恢復顏色開關 (可用於在不支持 ANSI 的環境中禁用顏色)
     const bool USE_COLORS = true;
 
-    // ANSI 顏色常數：用於在終端顯示不同顏色的文字
-    const std::string COLOR_RESET  = USE_COLORS ? "\033[0m" : "";
-    const std::string COLOR_RED    = USE_COLORS ? "\033[31m" : "";
-    const std::string COLOR_GREEN  = USE_COLORS ? "\033[32m" : "";
-    const std::string COLOR_YELLOW = USE_COLORS ? "\033[33m" : "";
-    const std::string COLOR_BLUE   = USE_COLORS ? "\033[34m" : "";
-    const std::string COLOR_MAGENTA= USE_COLORS ? "\033[35m" : "";
-    const std::string COLOR_CYAN   = USE_COLORS ? "\033[36m" : "";
-    const std::string COLOR_WHITE  = USE_COLORS ? "\033[37m" : "";
-    const std::string COLOR_BOLD   = USE_COLORS ? "\033[1m" : "";
+    // ANSI 顏色常數：利用終端轉義序列 (Escape Sequences) 改變文字顏色
+    // 格式：\033[Xm，其中 X 是顏色代碼。
+    const std::string COLOR_RESET  = USE_COLORS ? "\033[0m" : "";  // 重置為默認顏色
+    const std::string COLOR_RED    = USE_COLORS ? "\033[31m" : "";  // 警告/傷害
+    const std::string COLOR_GREEN  = USE_COLORS ? "\033[32m" : "";  // 成功/恢復
+    const std::string COLOR_YELLOW = USE_COLORS ? "\033[33m" : "";  // 技能/重要訊息
+    const std::string COLOR_BLUE   = USE_COLORS ? "\033[34m" : "";  // 提示/界面
+    const std::string COLOR_MAGENTA= USE_COLORS ? "\033[35m" : "";  // 物品/裝備
+    const std::string COLOR_CYAN   = USE_COLORS ? "\033[36m" : "";  // 獲得物品
+    const std::string COLOR_WHITE  = USE_COLORS ? "\033[37m" : "";  // 普通攻擊
+    const std::string COLOR_BOLD   = USE_COLORS ? "\033[1m" : "";   // 粗體強調
 
     /**
      * @brief Logger 命名空間：實作簡單的戰鬥紀錄系統
+     * 
+     * 採用了類似於「循環緩衝區」的邏輯：
+     * 1. 每條日誌都被 push 到 vector 末尾。
+     * 2. 當 vector 大小超過 MAX_LOGS 時，移除最舊的一條 (erase begin)。
+     * 這樣能確保 UI 面板始終顯示最新的戰鬥動態，而不會無限增長佔用內存。
      */
     namespace Logger {
         // 儲存最近的日誌訊息
@@ -96,6 +103,13 @@ namespace Utils {
 
     /**
      * @brief 生成視覺化血條
+     * 
+     * 實作原理：
+     * 1. 計算生命值百分比 (current/max)。
+     * 2. 將百分比映射到指定寬度 (width) 的字符數 (filledWidth)。
+     * 3. 構建字串：[填充符# + 空白符-] + 百分比數值。
+     * 4. 根據百分比區間賦予不同顏色 (紅 < 30%, 黃 < 60%, 綠 60%+)。
+     * 
      * @param current 當前生命值
      * @param max 最大生命值
      * @param width 血條寬度
@@ -120,6 +134,7 @@ namespace Utils {
 
     /**
      * @brief 清理終端螢幕
+     * 考慮了跨平台兼容性 (Windows 使用 cls, Unix/Linux 使用 ANSI 轉義序列)。
      */
     inline void clearScreen() {
         #ifdef _WIN32
@@ -131,7 +146,12 @@ namespace Utils {
 
     /**
      * @brief 安全地獲取整數輸入
-     * 處理非數字輸入，防止程序崩潰
+     * 
+     * 魯棒性設計：
+     * 1. 使用 std::getline 而非 std::cin >> value，避免輸入非數字時進入無限循環。
+     * 2. 使用 try-catch 捕獲 std::stoi 的異常 (invalid_argument, out_of_range)。
+     * 3. 只有在成功轉換為整數後才返回結果，否則持續提示用戶。
+     * 
      * @param prompt 輸入提示文字
      * @return 驗證後的整數值
      */

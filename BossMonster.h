@@ -44,6 +44,7 @@ public:
      * @return 技能數量 (Boss 怪物為 4)
      */
     int getSkillCount() const override { return 4; }
+    int getRandomSkill() override;
 };
 
 #endif

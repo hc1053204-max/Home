@@ -5,14 +5,16 @@ using namespace std;
 
 /**
  * @brief Monster 建構子
+ * 怪物通常由 GameManager 隨機生成，屬性隨關卡提升。
  */
 Monster::Monster(string n,int h,int a):Role(n,h,a){}
 
 /**
  * @brief 實作怪物的技能邏輯
- * 1. 狂暴衝鋒 (Furious Charge): 造成基礎攻擊力傷害
- * 2. 撕咬 (Bite): 造成基礎攻擊力 + 5 的傷害
- * 3. 咆哮 (Roar): 造成較低傷害 (基礎-3)
+ * 怪物技能設計為「簡單隨機」，不具備複雜的戰術考慮：
+ * 1. 狂暴衝鋒 (Furious Charge): 造成等同於基礎 atk 的傷害。
+ * 2. 撕咬 (Bite): 提供微量加成 (atk + 5)，模擬強力的單體攻擊。
+ * 3. 咆哮 (Roar): 造成低量傷害 (atk - 3)，但保證至少造成 1 點傷害。
  * @param target 技能目標
  * @param skillId 技能 ID
  */
@@ -33,6 +35,7 @@ void Monster::useSkill(Role&target,int skillId){
     else{
         Utils::Logger::addLog(Utils::COLOR_YELLOW + "[怪物技能] " + name + " 使用了 咆哮!" + Utils::COLOR_RESET);
         int dmg=atk-3;
+        // 邊界處理：確保攻擊力即使很低，也能造成至少 1 點傷害，避免出現 0 傷害的尷尬局面
         if(dmg<1)dmg=1;
         target.takeDamage(dmg);
     }

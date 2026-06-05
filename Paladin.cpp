@@ -6,6 +6,7 @@ using namespace std;
 /**
  * @brief Paladin 建構子
  * 設定聖騎士的初始屬性：HP 200, ATK 15 (高血量低攻擊)
+ * 設計意圖：聖騎士是遊戲中最強的生存者，雖然輸出較低，但能透過治療維持長時間作戰。
  */
 Paladin::Paladin(string n)
     : Role(n, 200, 15) {
@@ -13,15 +14,17 @@ Paladin::Paladin(string n)
 
 /**
  * @brief 實作聖騎士的技能邏輯
- * 1. 神聖打擊 (Holy Strike): 造成 2 倍攻擊力的強大傷害
- * 2. 神聖治癒 (Divine Heal): 恢復自身最大生命值的 25%
- * 3. 審判 (Judgment): 造成 1.5 倍攻擊力 + 10 額外固定傷害
+ * 聖騎士的技能設計圍繞在「生存力」與「聖光輸出」：
+ * 1. 神聖打擊 (Holy Strike): 高倍率單次傷害 (2x)，補足低攻擊力的缺點。
+ * 2. 神聖治癒 (Divine Heal): 核心生存技能，恢復 25% 最大生命值，使其在 Boss 戰中極具優勢。
+ * 3. 審判 (Judgment): 綜合傷害 (1.5x + 10)，提供穩定的輸出能力。
  * @param target 技能目標
  * @param skillId 技能 ID
  */
 void Paladin::useSkill(Role& target, int skillId) {
     if (skillId == 2) {
         // 神聖治癒: 自我恢復生命
+        // 設計意圖：提供戰鬥中的延續力。恢復量隨等級 (maxHp) 成長。
         Utils::Logger::addLog(Utils::COLOR_YELLOW + "[技能] " + name + " 使用了 神聖治癒 (恢復生命)" + Utils::COLOR_RESET);
         int heal = maxHp / 4; // 25% 恢復
         int oldHp = hp;
@@ -32,7 +35,7 @@ void Paladin::useSkill(Role& target, int skillId) {
         return;
     }
 
-    // 除了自我恢復技能外，其他技能需要目標存活
+    // 除了自我恢復技能外，其餘攻擊技能需要目標存活
     if (!target.isAlive()) {
         Utils::Logger::addLog(Utils::COLOR_BLUE + "[提示] " + name + " - 目標已經死亡!" + Utils::COLOR_RESET);
         return;

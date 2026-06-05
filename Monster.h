@@ -40,5 +40,6 @@ public:
      */
     void printSkills()override;
     int getSkillCount() const override { return 3; }
+    virtual int getRandomSkill() { return (rand() % getSkillCount()) + 1; }
 };
 #endif

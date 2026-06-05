@@ -68,6 +68,7 @@ public:
      * @param damage 傷害數值
      */
     void takeDamage(int damage);
+    void heal(int amount);
 
     /**
      * @brief 檢查角色是否仍然存活
@@ -82,6 +83,7 @@ public:
     int getAtk()const;
     int getLevel()const;
     virtual int getSkillCount() const { return 3; }
+    virtual int getRandomSkill() { return (rand() % getSkillCount()) + 1; }
 
     /**
      * @brief 獲取經驗值並檢查是否升級
