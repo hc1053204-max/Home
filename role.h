@@ -18,6 +18,8 @@ public:
     // 純虛擬函式：多型的核心
     // skillId: 1-3 為職業特定技能（由子類實現）
     virtual void useSkill(Role&target,int skillId)=0;
+    virtual string getSkillName(int skillId) const = 0;
+    virtual void printSkills()=0;
     // 基礎攻擊
     void attack(Role& target);
     // 傷害處理

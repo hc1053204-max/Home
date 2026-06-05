@@ -29,3 +29,18 @@ void Archer::useSkill(Role& target,int skillId){
         cout<<"[Archer] Unknown skill!"<<endl;
     }
 }
+
+string Archer::getSkillName(int skillId) const {
+    if(skillId == 1) return "連射";
+    if(skillId == 2) return "穿透箭";
+    if(skillId == 3) return "箭雨";
+    return "Unknown Skill";
+}
+
+void Archer::printSkills(){
+    cout << "\n--- " << name << " 技能列表 ---" << endl;
+    cout << "1. " << getSkillName(1) << " 傷害：" << atk * 2 << " (2次攻擊)" << endl;
+    cout << "2. " << getSkillName(2) << " 傷害：" << (int)(atk * 1.8) << endl;
+    cout << "3. " << getSkillName(3) << " 傷害：" << atk << " (機率暴擊)" << endl;
+    cout << "-------------------------" << endl;
+}

@@ -1,6 +1,8 @@
 #include "GameManager.h"
 #include <iostream>
 #include <cstdlib>
+#include <limits>
+#include "Utils.h"
 using namespace std;
 
 GameManager::GameManager():stage(1){}
@@ -21,36 +23,25 @@ bool GameManager::battle(Role&player,Role& monster){
     while(player.isAlive()&&monster.isAlive()){
         showHTMLUpdate(player,monster);
         // 玩家回合
-        int action=0;
-        bool validAction=false;
-        while(!validAction){
-            cout<<"\nChoose action:(1)Attack(2)Use Skill>";
-            cin>>action;
-            if(action==1||action==2){
-                validAction=true;
-            }
-            else{
-                cout<<"Invalid choice,enter 1 or 2"<<endl;
-            }
+        int action;
+        while (true) {
+            action = Utils::getSafeInt("\nChoose action:(1)Attack(2)Use Skill>");
+            if (action == 1 || action == 2) break;
+            cout << "Invalid choice, enter 1 or 2" << endl;
         }
         if(action==1){
             player.attack(monster);
         }
         else if(action==2){
-            int sid=0;
-            bool validSkill=false;
-            while(!validSkill){
-                cout<<"Choose skill (1-3) >";
-                cin>>sid;
-                if(sid>=1&&sid<=3){
-                    validSkill=true;
-                }
-                else{
-                    cout<<"Invalid skill id, enter 1-3"<<endl;
-                }
+                player.printSkills();
+                int sid;
+            while (true) {
+                sid = Utils::getSafeInt("Choose skill (1-3) >");
+                if (sid >= 1 && sid <= 3) break;
+                cout << "Invalid skill id, enter 1-3" << endl;
             }
-            player.useSkill(monster,sid);
-        }
+                player.useSkill(monster,sid);
+            }
         // 檢查怪物是否還活著
         if(!monster.isAlive()){
             break;
@@ -58,7 +49,7 @@ bool GameManager::battle(Role&player,Role& monster){
         // 怪物回合
         cout<<"\n[Monster Turn]"<<endl;
         int mskill=(rand()%3)+1;
-        cout<<monster.getName()<<" uses skill "<<mskill<<endl;
+        cout<<monster.getName()<<" uses " << monster.getSkillName(mskill) << endl;
         monster.useSkill(player,mskill);
     }
     // 戰鬥結果

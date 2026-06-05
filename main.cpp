@@ -7,6 +7,8 @@
 #include <vector>
 #include <ctime>
 #include <iostream>
+#include <limits>
+#include "Utils.h"
 using namespace std;
 // 定義常數
 const int MAX_STAGE=3;
@@ -18,14 +20,11 @@ int main(){
     srand((unsigned)time(nullptr));
     // 選擇職業
     int choice;
-    do{
-        cout<<"選擇職業:(1)戰士(2)法師(3)射手:";
-        cin>>choice;
-        if(choice<1||choice>3){
-            cout<<"無效選擇，請重試\n";
-        }
+    while (true) {
+        choice = Utils::getSafeInt("選擇職業:(1)戰士(2)法師(3)射手:");
+        if (choice >= 1 && choice <= 3) break;
+        cout << "無效選擇，請重試\n";
     }
-    while(choice<1||choice>3);
     unique_ptr<Role>hero;
     if(choice==1)hero=make_unique<Warrior>("戰士");
     else if(choice==2)hero=make_unique<Mage>("法師");

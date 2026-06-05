@@ -11,5 +11,7 @@ public:
     Monster(string n,int h,int a);
     // 怪物技能（覆寫基類）
     void useSkill(Role& target,int skillId)override;
+    string getSkillName(int skillId) const override;
+    void printSkills()override;
 };
 #endif
