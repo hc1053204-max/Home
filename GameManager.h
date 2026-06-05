@@ -12,5 +12,6 @@ public:
     bool battle(Role& player, Role&monster);
     // Getter
     int getStage()const;
+    void setStage(int s);
 };
 #endif
