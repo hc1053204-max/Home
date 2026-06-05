@@ -1,17 +1,17 @@
-﻿#include "Warrior.h"
-#include "Mage.h"
-#include "Archer.h"
-#include "Paladin.h"
-#include "Monster.h"
-#include "EliteMonster.h"
-#include "BossMonster.h"
-#include "GameManager.h"
+﻿#include "src/roles/Warrior.h"
+#include "src/roles/Mage.h"
+#include "src/roles/Archer.h"
+#include "src/roles/Paladin.h"
+#include "src/monsters/Monster.h"
+#include "src/monsters/EliteMonster.h"
+#include "src/monsters/BossMonster.h"
+#include "src/core/GameManager.h"
 #include <memory>
 #include <vector>
 #include <ctime>
 #include <iostream>
 #include <limits>
-#include "Utils.h"
+#include "src/core/Utils.h"
 using namespace std;
 
 // 遊戲平衡常數
