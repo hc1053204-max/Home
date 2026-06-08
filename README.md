@@ -11,6 +11,10 @@
 - **專題實作者: 程家豪、黃奕嘉**
 - **潛水實作者: 黎國英**
 
+##簡報檔:
+
+[RPG角色打怪遊戲.pdf](https://raw.githubusercontent.com/hc1053204-max/RPG-monster-fighting-game/refs/heads/main/RPG%E8%A7%92%E8%89%B2%E6%89%93%E6%80%AA%E9%81%8A%E6%88%B2.pdf)  
+
 ## 遊戲介紹
 
 ***
